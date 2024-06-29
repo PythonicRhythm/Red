@@ -57,98 +57,152 @@ digit: charset [#"0" - #"9"]
 digits: [some digit]
 letters: [some letter]
 
-access-modifiers: [
-    "public" |
-    "private" |
-    "default" |
-    "protected"
+; GRAMMAR
+
+redify: function [string] [
+    replace/all string "*" " * "
+    replace/all string "+" " + "
+    replace/all string "-" " - "
 ]
-
-static: [
-    "static"
-]
-
-type: [
-    letters
-    opt [some "[]"]
-]
-
-return-type: type
-
-whitespace: [
-    some " "
-]
-
-method-name: letters
-
-argument: [
-    type
-    whitespace
-    letters
-]
-
-arguments: [
-    some [
-        argument 
-        opt whitespace 
-        ","
-        opt whitespace
-    ]
-    argument
-]
-
-open-paren: "("
-close-paren: ")"
 
 expression: [
-    opt type
-    whitespace
-    letters
-    whitespace
-    "="
-    whitespace
-    digits
+    ; [term "+" expression] |
+    ; [term "-" expression] |
+    ; term
+
+    term
+    opt [ some [["+" | "-"] term]]
+]
+
+term: [
+    [factor "*" term] |
+    [factor "/" term] |
+    factor
+]
+
+factor: [
+    identifier |
+    integer |
+    ["(" expression ")"] |
+    [change "-" "negate " factor] 
+]
+
+identifier: [
+    letter
+    opt [letters | digits | "_"]
+]
+
+integer: digits
+
+; GRAB FILE AND USE LEXER
+lang-file:  trim read %lang-test.txt
+print ["Read:" lang-file]
+
+probe parse-trace lang-file [
+    copy result expression
     ";"
 ]
 
-inner-code: [
-    opt whitespace
-    opt expression
-    opt whitespace
-]
+print ["Result:" result]
+print load redify result
 
-open-brack: "open-bracket "
-close-brack: "close-bracket"
+; LEXICAL ANALYSIS
+; BEFORE PARSING WE NEED TO BREAK INPUT INTO A SEQUENCE OF TOKENS
 
-java-method: [
-    opt [access-modifiers whitespace]
-    opt [static whitespace]
-    return-type
-    whitespace
-    method-name
-    opt whitespace
-    open-paren
-    [argument | arguments]
-    opt whitespace
-    close-paren
-    opt whitespace
-    open-brack
-    opt whitespace
-    inner-code
-    opt whitespace
-    close-brack
-    opt whitespace
-]
 
-java-file: (replace/all (replace/all (trim read %test.txt) "{" "open-bracket ") "}" "close-bracket")
-probe java-file
 
-probe parse java-file [
-    java-method
-    mark:
-]
+; access-modifiers: [
+;     "public" |
+;     "private" |
+;     "default" |
+;     "protected"
+; ]
 
-probe mark
+; static: [
+;     "static"
+; ]
+
+; type: [
+;     letters
+;     opt [some "[]"]
+; ]
+
+; return-type: type
+
+; whitespace: [
+;     some " "
+; ]
+
+; method-name: letters
+
+; argument: [
+;     type
+;     whitespace
+;     letters
+; ]
+
+; arguments: [
+;     some [
+;         argument 
+;         opt whitespace 
+;         ","
+;         opt whitespace
+;     ]
+;     argument
+; ]
+
+; open-paren: "("
+; close-paren: ")"
+
+; expression: [
+;     opt type
+;     whitespace
+;     letters
+;     whitespace
+;     "="
+;     whitespace
+;     digits
+;     ";"
+; ]
+
+; inner-code: [
+;     opt whitespace
+;     opt expression
+;     opt whitespace
+; ]
+
+; open-brack: "open-bracket "
+; close-brack: "close-bracket"
+
+; java-method: [
+;     opt [access-modifiers whitespace]
+;     opt [static whitespace]
+;     return-type
+;     whitespace
+;     method-name
+;     opt whitespace
+;     open-paren
+;     [argument | arguments]
+;     opt whitespace
+;     close-paren
+;     opt whitespace
+;     open-brack
+;     opt whitespace
+;     inner-code
+;     opt whitespace
+;     close-brack
+;     opt whitespace
+; ]
+
+; java-file:  (replace/all (replace/all (trim read %java-test.txt) "{" "open-bracket ") "}" "close-bracket")
+; probe java-file
+
+; probe parse java-file [
+;     java-method
+;     mark:
+; ]
+
+; probe mark
 
 ; Helps replace text in string
 ; parse some-string [to "{" change "lawl"]
