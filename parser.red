@@ -100,13 +100,25 @@ arguments: [
 open-paren: "("
 close-paren: ")"
 
-inner-code: [
-    opt[letters ";"]
-    opt[whitespace]
+expression: [
+    opt type
+    whitespace
+    letters
+    whitespace
+    "="
+    whitespace
+    digits
+    ";"
 ]
 
-open-brack: "{"
-close-brack: "}"
+inner-code: [
+    opt whitespace
+    opt expression
+    opt whitespace
+]
+
+open-brack: "open-bracket "
+close-brack: "close-bracket"
 
 java-method: [
     opt [access-modifiers whitespace]
@@ -128,7 +140,7 @@ java-method: [
     opt whitespace
 ]
 
-java-file: trim read %test.txt
+java-file: (replace/all (replace/all (trim read %test.txt) "{" "open-bracket ") "}" "close-bracket")
 probe java-file
 
 probe parse java-file [
@@ -137,6 +149,9 @@ probe parse java-file [
 ]
 
 probe mark
+
+; Helps replace text in string
+; parse some-string [to "{" change "lawl"]
 
 ; probe parse "770-402-8830" [
 ;     copy area-code digits
