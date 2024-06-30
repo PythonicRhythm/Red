@@ -1,12 +1,14 @@
 Red []
 
-
-
 letter: charset [#"A" - #"Z" #"a" - #"z"]
 digit: charset [#"0" - #"9"]
 digits: [some digit]
 letters: [some letter]
+string-contains: [some [opt digits opt letters opt digits]]
 whitespace: [some " "]
+integer: digits
+float: [digits "." digits]
+string-literal: ["^"" opt[string-contains] "^""]
 
 ; allTokens: []
 
@@ -51,10 +53,15 @@ erase_space: function [line] [
     ]
 ]
 
+data-type: [
+    string-literal
+]
+
 action: [
     action-keyword
     whitespace
-    expression
+    [expression | data-type]
+    mark:
 ]
 
 assignment: [
@@ -64,7 +71,7 @@ assignment: [
         "<"
     ] ":"
     opt whitespace
-    expression
+    [expression | data-type]
 ]
 
 action-keyword: [
@@ -83,11 +90,13 @@ expression: [
 term: [
     [factor opt whitespace "*" opt whitespace term] |
     [factor opt whitespace "/" opt whitespace term] |
+    [factor opt whitespace "%" opt whitespace term] |
     factor
 ]
 
 factor: [
     identifier |
+    float |
     integer |
     ["(" expression ")"] |
     [[change "-" "(negate "] [factor insert ")"]]
@@ -97,8 +106,6 @@ identifier: [
     letter
     opt [letters | digits | "_"]
 ]
-
-integer: digits
 
 ; GRAB FILE AND USE LEXER
 lang-file:  trim read %lang-test.txt
@@ -151,8 +158,10 @@ if error-flag = true [
     ]
 ]
 
-print ["Result:" result]
-do redify result
+print 4.5 * 2
+
+; print ["Result:" result]
+; do redify result
 ; print f
 ; print f1
 
