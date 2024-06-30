@@ -141,7 +141,7 @@ error-flag: ""
 line-counter: 0
 
 foreach single-line code-lines [
-    error-flag: parse-trace single-line [
+    error-flag: parse single-line [
         copy line [[
             action |
             assignment |
