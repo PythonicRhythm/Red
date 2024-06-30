@@ -1,5 +1,111 @@
 Red []
 
+
+
+letter: charset [#"A" - #"Z" #"a" - #"z"]
+digit: charset [#"0" - #"9"]
+digits: [some digit]
+letters: [some letter]
+whitespace: [some " "]
+
+; allTokens: []
+
+; LEXER
+; lang-file:  trim read %lang-test.txt
+; print lang-file
+; lines: split lang-file "^/"
+; probe lines
+
+; probe allTokens
+
+
+; GRAMMAR
+
+redify: function [string] [
+    replace/all string "*" " * "
+    replace/all string "+" " + "
+    replace/all string "-" " - "
+]
+
+action: [
+    action-keyword
+    whitespace
+    expression
+]
+
+assignment: [
+    identifier
+    change [
+        opt whitespace
+        "<"
+    ] ":"
+    opt whitespace
+    expression
+]
+
+action-keyword: [
+    [change "show" "print"] |
+    [change "unload" "probe"]
+]
+
+expression: [
+    ; [term "+" expression] |
+    ; [term "-" expression] |
+    ; term
+
+    term
+    opt [ some [[opt whitespace "+" opt whitespace | opt whitespace"-" opt whitespace] term]]
+]
+
+term: [
+    [factor opt whitespace "*" opt whitespace term] |
+    [factor opt whitespace "/" opt whitespace term] |
+    factor
+]
+
+factor: [
+    identifier |
+    integer |
+    ["(" expression ")"] |
+    [[change "-" "(negate "] [factor insert ")"]]
+]
+
+identifier: [
+    letter
+    opt [letters | digits | "_"]
+]
+
+integer: digits
+
+; GRAB FILE AND USE LEXER
+lang-file:  trim read %lang-test.txt
+; print ["Read:" lang-file]
+code-lines: split lang-file "^/"
+
+probe parse lang-file [
+    ; Make sure to check action first for
+    ; keywords such as print and probe not
+    ; being considered identifiers in assignment
+    copy result some [[
+        action |
+        assignment |
+        expression
+        mark:
+    ]
+    #"^/"]
+    ""
+]
+
+print ["Result:" result]
+do redify result
+; print f
+; print f1
+
+
+; LEXICAL ANALYSIS
+; BEFORE PARSING WE NEED TO BREAK INPUT INTO A SEQUENCE OF TOKENS
+
+
 ; Homoiconic (same icon/symbol) paradigm
 
 ; x: 1
@@ -52,65 +158,6 @@ Red []
 ; print point/x
 ; print next-point/i-do-something
 
-letter: charset [#"A" - #"Z" #"a" - #"z"]
-digit: charset [#"0" - #"9"]
-digits: [some digit]
-letters: [some letter]
-
-; GRAMMAR
-
-redify: function [string] [
-    replace/all string "*" " * "
-    replace/all string "+" " + "
-    replace/all string "-" " - "
-]
-
-expression: [
-    ; [term "+" expression] |
-    ; [term "-" expression] |
-    ; term
-
-    term
-    opt [ some [["+" | "-"] term]]
-]
-
-term: [
-    [factor "*" term] |
-    [factor "/" term] |
-    factor
-]
-
-factor: [
-    identifier |
-    integer |
-    ["(" expression ")"] |
-    [change "-" "negate " factor] 
-]
-
-identifier: [
-    letter
-    opt [letters | digits | "_"]
-]
-
-integer: digits
-
-; GRAB FILE AND USE LEXER
-lang-file:  trim read %lang-test.txt
-print ["Read:" lang-file]
-
-probe parse-trace lang-file [
-    copy result expression
-    ";"
-]
-
-print ["Result:" result]
-print load redify result
-
-; LEXICAL ANALYSIS
-; BEFORE PARSING WE NEED TO BREAK INPUT INTO A SEQUENCE OF TOKENS
-
-
-
 ; access-modifiers: [
 ;     "public" |
 ;     "private" |
@@ -128,10 +175,6 @@ print load redify result
 ; ]
 
 ; return-type: type
-
-; whitespace: [
-;     some " "
-; ]
 
 ; method-name: letters
 
