@@ -27,6 +27,30 @@ redify: function [string] [
     replace/all string "-" " - "
 ]
 
+; Recreated filter method
+; 'f represents a function to be called
+; array is the array that is being looped on
+filter: function ['f array] [
+    ret: copy []
+    foreach element array [
+        if do reduce [f element] [
+            append ret element
+        ]
+    ]
+    ret
+]
+
+; Custom filter method for removing empty
+; lines on code imports.
+erase_space: function [line] [
+    ret: false
+    either empty? line [
+        ret: false
+    ] [
+        ret: true
+    ]
+]
+
 action: [
     action-keyword
     whitespace
@@ -52,7 +76,6 @@ expression: [
     ; [term "+" expression] |
     ; [term "-" expression] |
     ; term
-
     term
     opt [ some [[opt whitespace "+" opt whitespace | opt whitespace"-" opt whitespace] term]]
 ]
@@ -79,21 +102,53 @@ integer: digits
 
 ; GRAB FILE AND USE LEXER
 lang-file:  trim read %lang-test.txt
-; print ["Read:" lang-file]
 code-lines: split lang-file "^/"
+; code-lines: exclude code-lines [#"^/" ""]
 
-probe parse lang-file [
-    ; Make sure to check action first for
-    ; keywords such as print and probe not
-    ; being considered identifiers in assignment
-    copy result some [[
-        action |
-        assignment |
-        expression
-        mark:
+code-lines: filter erase_space code-lines
+
+; probe parse lang-file [
+;     ; Make sure to check action first for
+;     ; keywords such as print and probe not
+;     ; being considered identifiers in assignment
+;     copy result some [[
+;         action |
+;         assignment |
+;         expression
+;         mark:
+;     ]
+;     #"^/"]
+;     ""
+; ]
+
+result: []
+error-flag: ""
+line-counter: 0
+
+foreach single-line code-lines [
+    error-flag: parse single-line [
+        copy line [[
+            action |
+            assignment |
+            expression
+        ]
+        ["^/" | ""]]
     ]
-    #"^/"]
-    ""
+    line-counter: line-counter + 1
+
+    if error-flag = false [
+        print ["Syntax Error on line ("line-counter"): " single-line]
+        break
+    ]
+
+    append result line
+]
+
+; If there are no errors, run all code.
+if error-flag = true [
+    foreach line result [
+        do redify line
+    ]
 ]
 
 print ["Result:" result]
