@@ -1,13 +1,1 @@
-show 10
-unload -(10 + 5- 3)*2
-hello < 5
-
-show "Hasdf555Dfsadfsdfff54545"
-stringvar < "howdy"
-show stringvar
-show 4.5
-
-show hello
-hello < 10
-show hello
-show hello % (5-2)
+show unload grab <javatest.txt>

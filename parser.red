@@ -4,7 +4,7 @@ letter: charset [#"A" - #"Z" #"a" - #"z"]
 digit: charset [#"0" - #"9"]
 digits: [some digit]
 letters: [some letter]
-string-contains: [some [opt digits opt letters opt digits]]
+string-contains: [some [opt digits opt "-" opt letters opt "-" opt digits]]
 whitespace: [some " "]
 integer: digits
 float: [digits "." digits]
@@ -53,6 +53,14 @@ erase_space: function [line] [
     ]
 ]
 
+file-path: [
+    change "<" "%"
+    opt string-contains
+    opt "."
+    opt letters
+    change ">" ""
+]
+
 data-type: [
     string-literal
 ]
@@ -60,8 +68,7 @@ data-type: [
 action: [
     action-keyword
     whitespace
-    [expression | data-type]
-    mark:
+    [action | expression | data-type | file-path]
 ]
 
 assignment: [
@@ -76,7 +83,8 @@ assignment: [
 
 action-keyword: [
     [change "show" "print"] |
-    [change "unload" "probe"]
+    [change "unload" "probe"] |
+    [change "grab" "read"]
 ]
 
 expression: [
@@ -84,7 +92,7 @@ expression: [
     ; [term "-" expression] |
     ; term
     term
-    opt [ some [[opt whitespace "+" opt whitespace | opt whitespace"-" opt whitespace] term]]
+    opt [ some [[opt whitespace "+" opt whitespace | opt whitespace "-" opt whitespace] term]]
 ]
 
 term: [
@@ -133,7 +141,7 @@ error-flag: ""
 line-counter: 0
 
 foreach single-line code-lines [
-    error-flag: parse single-line [
+    error-flag: parse-trace single-line [
         copy line [[
             action |
             assignment |
@@ -157,8 +165,6 @@ if error-flag = true [
         do redify line
     ]
 ]
-
-print 4.5 * 2
 
 ; print ["Result:" result]
 ; do redify result
@@ -301,7 +307,7 @@ print 4.5 * 2
 ;     opt whitespace
 ; ]
 
-; java-file:  (replace/all (replace/all (trim read %java-test.txt) "{" "open-bracket ") "}" "close-bracket")
+; java-file:  (replace/all (replace/all (trim read %javatest.txt) "{" "open-bracket ") "}" "close-bracket")
 ; probe java-file
 
 ; probe parse java-file [
